@@ -45,7 +45,7 @@ public class OrdersHandler {
   }
 
   synchronized void scheduledPrintOrders() {
-    System.out.println("\n########### Printing aggregated orders ##########\n");
+    System.out.println("########### Printing aggregated orders ##########");
     if (destinationOrders.isEmpty()) {
       System.out.println("No orders pending");
     }
@@ -95,7 +95,7 @@ public class OrdersHandler {
 
   private void printOrder(Order order) {
     System.out.printf("\nDestination %s\n", order.getDestination());
-    System.out.println("\n----------Mene Items-------------\n");
+    System.out.println("----------Mene Items-------------");
     order.getMenuItems().forEach(mi -> {
       System.out.printf("\n%s, price = %d\n", mi.getDescription(), mi.getPrice());
       allOrders.remove(order);
