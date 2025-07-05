@@ -39,7 +39,7 @@ public class OrdersHandler {
   }
 
   //Print all remaining orders by the time of arrival
-  public void printAllOrders() {
+  public synchronized void printAllOrders() {
     System.out.println("Printing all orders");
     allOrders.forEach(this::printOrder);
   }
