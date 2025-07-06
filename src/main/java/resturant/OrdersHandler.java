@@ -6,23 +6,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import resturant.model.MenuItem;
 import resturant.model.Order;
 
 public class OrdersHandler {
 
-  private static final int CORE_POOL_SIZE = 10;
   final ScheduledExecutorService printScheduler;
   final List<Order> allOrders;
   final Map<String, List<Order>> destinationOrders;
 
-  public OrdersHandler() {
-    printScheduler = Executors.newScheduledThreadPool(CORE_POOL_SIZE);
-    printScheduler.schedule(this::scheduledPrintOrders, 5, TimeUnit.SECONDS);
+  public OrdersHandler(ScheduledExecutorService printScheduler) {
+    this.printScheduler = printScheduler;
+    this.printScheduler.schedule(this::scheduledPrintOrders, 5, TimeUnit.SECONDS);
     allOrders = new ArrayList<>();
     destinationOrders = new ConcurrentHashMap<>();
   }
@@ -50,47 +47,54 @@ public class OrdersHandler {
       System.out.println("No orders pending");
     }
     List<Order> accumulated = new ArrayList<>();
-//Sort by number of orders and if equal by arrival
-    List<Entry<String, List<Order>>> sortedByNumOfOrders = destinationOrders.entrySet().stream()
-        .sorted((es1, es2) -> {
-          List<Order> orders1 = es1.getValue();
-          List<Order> orders2 = es2.getValue();
-          int size1 = orders1.size();
-          int size2 = orders2.size();
-          if (size2 != size1) {
-            return size2 - size1;
-          }
-          return (int) (orders1.get(0).getArrivalTime() - orders2.get(0).getArrivalTime());
-        })
-        .collect(Collectors.toList());
+    boolean doneDelivery = false;
+    Iterator<Entry<String, List<Order>>> iterator = destinationOrders.entrySet().iterator();
+    doneDelivery = handleFirstDestination(iterator, accumulated, doneDelivery);
+    if (!doneDelivery) {
+      handleRestOfOrders(iterator, accumulated);
+    }
+    printScheduler.schedule(this::scheduledPrintOrders, 5, TimeUnit.SECONDS);
+  }
 
-    for (Map.Entry<String, List<Order>> entry : sortedByNumOfOrders) {
-      List<Order> orders = entry.getValue();
+  private boolean handleFirstDestination(Iterator<Entry<String, List<Order>>> iterator, List<Order> accumulated, boolean doneDelivery) {
+    Entry<String, List<Order>> firstDestination = iterator.next();
+    accumulated.addAll(firstDestination.getValue());
+    if (accumulated.size() == 3) {
+      flush(accumulated);
+      accumulated.clear();
+      doneDelivery = true;
+    }
+    return doneDelivery;
+  }
 
-      Iterator<Order> iterator = orders.iterator();
-      while (iterator.hasNext()) {
-        Order order = iterator.next();
-        accumulated.add(order);
-        iterator.remove();
-        if (accumulated.size() == 3) {
-          flush(accumulated);
-          accumulated.clear();
-        }
+  private void handleRestOfOrders(Iterator<Entry<String, List<Order>>> iterator, List<Order> accumulated) {
+    String maxDestination = "";
+    int count = 0;
+    while (iterator.hasNext()) {
+      Entry<String, List<Order>> next = iterator.next();
+      if (next.getValue().size() > count) {
+        maxDestination = next.getKey();
+        count = next.getValue().size();
       }
     }
-
-    destinationOrders.entrySet().removeIf(entry -> entry.getValue().isEmpty());
-
-    if (!accumulated.isEmpty()) {
-      flush(accumulated);
+    List<Order> orders = destinationOrders.get(maxDestination);
+    for (Order nextOrder : orders) {
+      accumulated.add(nextOrder);
+      if (accumulated.size() == 3) {
+        flush(accumulated);
+        accumulated.clear();
+        break;
+      }
     }
-
-    printScheduler.schedule(this::scheduledPrintOrders, 5, TimeUnit.SECONDS);
   }
 
   //Flush accumulated 3 orders
   private synchronized void flush(List<Order> accumulated) {
-    accumulated.forEach(this::printOrder);
+    accumulated.forEach(order -> {
+      printOrder(order);
+      allOrders.remove(order);
+      destinationOrders.get(order.getDestination()).remove(order);
+    });
   }
 
   private void printOrder(Order order) {
@@ -98,7 +102,6 @@ public class OrdersHandler {
     System.out.println("----------Mene Items-------------");
     order.getMenuItems().forEach(mi -> {
       System.out.printf("\n%s, price = %d\n", mi.getDescription(), mi.getPrice());
-      allOrders.remove(order);
     });
   }
 }
