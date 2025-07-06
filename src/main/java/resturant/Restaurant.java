@@ -23,6 +23,10 @@ public class Restaurant {
     ordersHandler.addItems(destination, menuItems);
   }
 
+  public void printAllOrders(){
+    ordersHandler.printAllOrders();;
+  }
+
   public static void main(String[] args) {
 
     Restaurant restaurant = new Restaurant(4);
@@ -36,5 +40,7 @@ public class Restaurant {
     restaurant.addOrder("Netanya", menuItems);
     restaurant.addOrder("Kfar Saba", menuItems);
     restaurant.addOrder("Kfar Saba", menuItems);
+
+    restaurant.printAllOrders();
   }
 }
