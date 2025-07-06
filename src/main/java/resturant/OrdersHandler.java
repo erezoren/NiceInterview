@@ -77,13 +77,15 @@ public class OrdersHandler {
         count = next.getValue().size();
       }
     }
-    List<Order> orders = destinationOrders.get(maxDestination);
-    for (Order nextOrder : orders) {
-      accumulated.add(nextOrder);
-      if (accumulated.size() == 3) {
-        flush(accumulated);
-        accumulated.clear();
-        break;
+    if (!maxDestination.isEmpty()) {
+      List<Order> orders = destinationOrders.get(maxDestination);
+      for (Order nextOrder : orders) {
+        accumulated.add(nextOrder);
+        if (accumulated.size() == 3) {
+          flush(accumulated);
+          accumulated.clear();
+          break;
+        }
       }
     }
   }
