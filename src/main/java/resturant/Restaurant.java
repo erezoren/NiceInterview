@@ -2,7 +2,6 @@ package resturant;
 
 import java.util.List;
 import java.util.concurrent.Executors;
-import resturant.model.Menu;
 import resturant.model.MenuItem;
 import resturant.model.Pasta;
 import resturant.model.Pizza;
