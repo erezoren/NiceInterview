@@ -2,10 +2,9 @@ package resturant;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import resturant.model.MenuItem;
@@ -15,13 +14,13 @@ public class OrdersHandler {
 
   final ScheduledExecutorService printScheduler;
   final List<Order> allOrders;
-  final Map<String, List<Order>> destinationOrders;
+  final LinkedHashMap<String, List<Order>> destinationOrders;
 
   public OrdersHandler(ScheduledExecutorService printScheduler) {
     this.printScheduler = printScheduler;
     this.printScheduler.schedule(this::scheduledPrintOrders, 5, TimeUnit.SECONDS);
     allOrders = new ArrayList<>();
-    destinationOrders = new ConcurrentHashMap<>();
+    destinationOrders = new LinkedHashMap<>();
   }
 
   void addItems(String destination, List<MenuItem> menuItems) {
@@ -29,7 +28,7 @@ public class OrdersHandler {
       System.out.println("No items ordered");
       return;
     }
-    Order order = new Order(destination, System.currentTimeMillis(), menuItems);
+    Order order = new Order(destination, menuItems);
     allOrders.add(order);
     destinationOrders.putIfAbsent(destination, new ArrayList<>());
     destinationOrders.get(destination).add(order);

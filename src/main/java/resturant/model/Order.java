@@ -8,7 +8,6 @@ import lombok.Singular;
 public class Order {
 
   final String destination;
-  final long arrivalTime;
   @Singular
   final List<MenuItem> menuItems;
 }

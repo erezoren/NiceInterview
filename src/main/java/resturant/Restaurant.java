@@ -41,6 +41,6 @@ public class Restaurant {
     restaurant.addOrder("Kfar Saba", menuItems);
     restaurant.addOrder("Kfar Saba", menuItems);
 
-    restaurant.printAllOrders();
+    //restaurant.printAllOrders();
   }
 }
